@@ -2,11 +2,10 @@ import { Box, Checkbox, Flex, Stack, Tooltip } from '@sanity/ui';
 import React, { useCallback, useContext } from 'react';
 import { Correction } from './Correction';
 import { ExpandedWordsContext, SpellcheckDispatch, WordContext } from '../SpellcheckContext';
-import styles from './MisspelledWord.css';
 import { ExpandWord } from './ExpandWord';
 import { CorrectedOccurrence, CorrectedWord } from '../../reducer/spellcheck-reducer';
-import { classNames } from '../../../core/helpers';
 import { useDisplayText } from '../display-texts/DisplayTexts';
+import { CheckboxDiv, CheckboxTooltipDiv, MisspelledWordCard } from './MisspelledWord.styled';
 
 interface IProps {
   correctedWord: CorrectedWord;
@@ -72,7 +71,7 @@ function ExpandableWordOccurrence(props: IOccurrenceProps) {
       closeSuggest: true,
       correction: isAccepted ? newCorrection : correction,
     });
-  }, [occurrence, suggestions, dispatch]);
+  }, [occurrence, suggestions, dispatch, correction]);
 
   if (hidden) {
     return null;
@@ -103,7 +102,7 @@ const WordOccurrenceComponent = React.memo(function WordOccurrenceComponent(
   const { occurrence, setWordContext, selected } = props;
   const { word, startPosition } = occurrence;
   return (
-    <div className={classNames(styles.misspelledWord, selected && styles.misspelledWordSelected)}>
+    <MisspelledWordCard selected={selected}>
       <Flex key={word + startPosition} onClick={setWordContext} align="center">
         <Box padding={1}>
           <SelectCorrection {...props} />
@@ -118,7 +117,7 @@ const WordOccurrenceComponent = React.memo(function WordOccurrenceComponent(
           <Correction {...props} />
         </Box>
       </Flex>
-    </div>
+    </MisspelledWordCard>
   );
 });
 
@@ -135,22 +134,22 @@ function SelectCorrection(props: IOccurrenceInnerProps) {
       portal
       placement="right"
       content={
-        <div className={styles.checkboxTooltip}>
+        <CheckboxTooltipDiv>
           <Box padding={2}>
             {disabled ? disabledSelectCorrectionTooltip : null}
-            {!disabled ? enabledSelectCorrectionTooltip : null}
+            {disabled ? null : enabledSelectCorrectionTooltip}
           </Box>
-        </div>
+        </CheckboxTooltipDiv>
       }
     >
-      <div className={styles.checkbox}>
+      <CheckboxDiv>
         <Checkbox
           indeterminate={indeterminateAccepted}
           disabled={disabled}
           checked={!!accepted}
           onChange={toggleAcceptCorrection}
         />
-      </div>
+      </CheckboxDiv>
     </Tooltip>
   );
 }

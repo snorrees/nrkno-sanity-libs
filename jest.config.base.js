@@ -1,18 +1,13 @@
 module.exports = {
   roots: ['<rootDir>/src'],
   testEnvironment: 'node',
-  globals: {
-    'ts-jest': {
-      tsconfig: 'tsconfig.json',
-    },
-  },
-  preset: 'ts-jest',
   transform: {
-    '^.+\\.ts$': 'ts-jest',
+    '^.+\\.(mjs|js|jsx|ts|tsx)$': 'babel-jest',
   },
   testRegex: '(/src/.*.(test|spec)).(jsx?|tsx?)$',
   moduleFileExtensions: ['ts', 'tsx', 'js', 'jsx', 'json', 'node'],
   coveragePathIgnorePatterns: ['(tests/.*.mock).(jsx?|tsx?)$'],
   modulePathIgnorePatterns: ['<rootDir>/build/'],
-  moduleDirectories: ['node_modules', './'],
+  moduleDirectories: ['node_modules', __dirname],
+  transformIgnorePatterns: ['node_modules/(?!(nanoid|uuid|get-random-values-esm))'],
 };

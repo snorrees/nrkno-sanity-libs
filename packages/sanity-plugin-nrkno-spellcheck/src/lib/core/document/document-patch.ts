@@ -1,6 +1,5 @@
 import groupBy from 'lodash/groupBy';
-import { pathToString } from '@sanity/field/lib/paths';
-import { PatchOperations, Path } from '@sanity/types';
+import { pathToString, PatchOperations, Path } from 'sanity';
 import { ReplaceOperation } from '../types';
 
 export function createPathPatch(
@@ -31,7 +30,7 @@ export function createPathPatch(
 
 export function createPathPatches(ops: ReplaceOperation[]) {
   const byPath = groupBy(ops, (op) => pathToString(op.pathValue.path));
-  return Object.values(byPath).map((ops) =>
-    createPathPatch(ops[0].pathValue.value, ops[0].pathValue.path, ops)
+  return Object.values(byPath).map((_ops) =>
+    createPathPatch(_ops[0].pathValue.value, _ops[0].pathValue.path, _ops)
   );
 }

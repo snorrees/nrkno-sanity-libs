@@ -1,13 +1,16 @@
 import { CustomGroupId } from './group-registry';
-import { SortItem } from '@sanity/structure/src/Sort';
-import { ListItemBuilder } from '@sanity/structure/lib/ListItem';
-import { DocumentSchema } from '@nrk/nrkno-sanity-typesafe-schemas';
+import { ListItemBuilder, ViewBuilder } from 'sanity/desk';
+import { DocumentDefinition } from 'sanity';
 import { XOR } from './utility-types';
-import { ViewBuilder } from '@sanity/structure/lib/views/View';
+import { ComponentType, ReactNode } from 'react';
+import { DefaultDocumentNodeContext, StructureBuilder } from 'sanity/lib/exports/desk';
 
-// this is how StructureBuilder is typed
-// eslint-disable-next-line @typescript-eslint/ban-types
-export type IconType = Function;
+export type SortItem = {
+  field: string;
+  direction: 'asc' | 'desc';
+};
+
+export type IconType = ComponentType | ReactNode;
 
 export interface StructureBase {
   /**
@@ -18,14 +21,6 @@ export interface StructureBase {
    * See [create-access-roles.md](../../../docs/how-tos/create-access-roles.md) for details.
    *
    * Visit Sanity management console to find the role-ids.
-   *
-   * Note if you use enabledForRoles, the document will not appear in
-   * the "create new" menu, because user cannot be resolved when the menu is populated.
-   *
-   * Documents not in the Create new menu cannot be created in place
-   * for references.
-   *
-   * This might change when part:@sanity/base/new-document-structure supports promises.
    *
    * @example enabledForRoles: ['developer', 'administrator']
    * */
@@ -38,7 +33,6 @@ export interface StructureBase {
    * So: set to true for types that are in a group with addToCreateMenu: false,
    * but needs to be created in place.
    *
-   * Note: if enabledForRoles is set, the type is not creatable no matter this setting.
    * @see createFromTopMenu
    * @see createNewMenuSortLast
    * */
@@ -108,7 +102,7 @@ export interface DocumentListSpec extends StructureSpec {
 }
 
 export type DocumentList = {
-  schema: DocumentSchema;
+  schema: DocumentDefinition;
   spec: DocumentListSpec & RequiredTitle & GroupableSpec;
 };
 
@@ -131,11 +125,11 @@ export interface ManualSpec extends StructureBase {
 }
 
 export interface SingletonDocument {
-  schema: DocumentSchema;
+  schema: DocumentDefinition;
   spec: SingletonDocumentSpec & RequiredTitle & { urlId: string };
 }
 
-export type CustomBuilder = (schema: DocumentSchema) => ListItemBuilder;
+export type CustomBuilder = (schema: DocumentDefinition) => ListItemBuilder;
 
 export interface CustomBuilderSpec extends StructureSpec {
   type: 'custom-builder';
@@ -144,7 +138,7 @@ export interface CustomBuilderSpec extends StructureSpec {
 
 export interface CustomItem {
   spec: CustomBuilderSpec & RequiredTitle;
-  schema: DocumentSchema;
+  schema: DocumentDefinition;
 }
 
 export type CustomSubgroup = Omit<SubgroupSpec, 'type'>;
@@ -164,7 +158,7 @@ export type GroupableSpec = Groupable &
 
 export interface ViewSpec {
   omitFormView?: boolean;
-  views?: ViewBuilder | ViewBuilder[];
+  views?: (S: StructureBuilder, context: DefaultDocumentNodeContext) => ViewBuilder | ViewBuilder[];
 }
 
 export type CustomStructureSpec = XOR<GroupableSpec, ManualSpec> & ViewSpec;

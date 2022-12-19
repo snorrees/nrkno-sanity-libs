@@ -1,5 +1,6 @@
 import React, {
   Dispatch,
+  ForwardedRef,
   forwardRef,
   MutableRefObject,
   SetStateAction,
@@ -8,12 +9,11 @@ import React, {
   useRef,
   useState,
 } from 'react';
-import { useDebouncedEffect } from '@nrk/nrkno-sanity-react-utils';
+import { useDebouncedEffect } from '@snorreeb/nrkno-sanity-react-utils';
 // @ts-expect-errors missing types
 import CoreSuggest from '@nrk/core-suggest/jsx';
-import { classNames } from '../../../core/helpers';
-import styles from './Correction.css';
-import editStyles from './EditCorrection.css';
+import { SuggestListUl } from './Correction.styled';
+import { SuggestContainerBox, SuggestInput } from './EditCorrection.styled';
 
 type SetCorrection = (correction: string, closeSuggest: boolean) => void;
 
@@ -27,6 +27,7 @@ export function EditCorrection({ correction, setCorrection, suggestions }: IEdit
   const [localValue, setLocalValue] = useState(
     correction || (suggestions.length === 1 ? suggestions[0] : '')
   );
+
   const inputRef = useAutoSelectionRef(localValue);
   const emitValue = useEmitValue(setLocalValue, setCorrection);
   const disableEscape = useDisableEscape(localValue, inputRef, setCorrection);
@@ -44,7 +45,7 @@ export function EditCorrection({ correction, setCorrection, suggestions }: IEdit
         requestAnimationFrame(() => inputRef.current?.setSelectionRange(0, word.length));
       }
     },
-    [suggestions, emitValue]
+    [inputRef, emitValue]
   );
 
   const onSuggestFilter = useCallback(
@@ -54,7 +55,7 @@ export function EditCorrection({ correction, setCorrection, suggestions }: IEdit
 
   return (
     <>
-      <div className={editStyles.suggestContainer} onKeyDown={disableEscape}>
+      <SuggestContainerBox onKeyDown={disableEscape}>
         <CorrectionInput
           ref={inputRef}
           localValue={localValue}
@@ -65,11 +66,11 @@ export function EditCorrection({ correction, setCorrection, suggestions }: IEdit
         />
         {showSuggestions && (
           <CoreSuggest
-            className={classNames(editStyles.coreSuggest, styles.coreSuggest)}
+            className={'coreSuggest'}
             onSuggestFilter={onSuggestFilter}
             onSuggestSelect={onSuggestSelect}
           >
-            <ul className={styles.suggestList}>
+            <SuggestListUl>
               {suggestions.map((suggestion) => (
                 <Suggestion
                   key={suggestion}
@@ -79,10 +80,10 @@ export function EditCorrection({ correction, setCorrection, suggestions }: IEdit
                   localValue={localValue}
                 />
               ))}
-            </ul>
+            </SuggestListUl>
           </CoreSuggest>
         )}
-      </div>
+      </SuggestContainerBox>
     </>
   );
 }
@@ -96,7 +97,7 @@ interface SuggestionProps {
 
 function Suggestion({ suggestion, addFocused, removeFocused, localValue }: SuggestionProps) {
   const onFocus = useCallback(() => addFocused(suggestion), [suggestion, addFocused]);
-  const onBlur = useCallback(() => removeFocused(suggestion), [suggestion, addFocused]);
+  const onBlur = useCallback(() => removeFocused(suggestion), [suggestion, removeFocused]);
 
   return (
     <li>
@@ -119,16 +120,17 @@ interface CorrectionInputProps {
 
 const CorrectionInput = forwardRef(function CorrectionInput(
   { localValue, addFocused, removeFocused, emitValue, setLocalValue }: CorrectionInputProps,
-  inputRef: MutableRefObject<HTMLInputElement>
+  inputRef: ForwardedRef<HTMLInputElement>
 ) {
   return (
-    <input
+    <SuggestInput
       ref={inputRef}
-      className={editStyles.suggestInput}
       style={{ height: '35px' }}
       type="text"
       value={localValue}
-      onClick={() => inputRef.current?.setSelectionRange(0, localValue.length)}
+      onClick={() =>
+        typeof inputRef !== 'function' && inputRef?.current?.setSelectionRange(0, localValue.length)
+      }
       onFocus={() => addFocused('input')}
       onBlur={() => {
         emitValue(localValue, false);
@@ -159,7 +161,7 @@ function useDisableEscape(
         setCorrection(localValue, true);
       }
     },
-    [localValue, setCorrection]
+    [inputRef, localValue, setCorrection]
   );
 }
 
@@ -174,16 +176,21 @@ function useDisableEscape(
 function useFocusCounting(setCorrection: SetCorrection, localValue: string) {
   const [focused, setFocused] = useState<string[]>([]);
 
-  const addFocused = useCallback((id) => setFocused((current) => [...current, id]), [setFocused]);
+  const addFocused = useCallback(
+    (id: string) => setFocused((current) => [...current, id]),
+    [setFocused]
+  );
   const removeFocused = useCallback(
-    (id) => setFocused((current) => current.filter((el) => el !== id)),
+    (id: string) => setFocused((current) => current.filter((el) => el !== id)),
     [setFocused]
   );
 
   useDebouncedEffect(
     () => {
       // closes this component when no input/button has focus anymore
-      !focused.length && setCorrection(localValue, true);
+      if (!focused.length) {
+        setCorrection(localValue, true);
+      }
     },
     [focused, localValue],
     0 // debounce with 0 delay ensures blur & focus are processed in the same tick
@@ -219,6 +226,8 @@ function useAutoSelectionRef(localValue: string) {
       inputRef.current?.setSelectionRange(0, localValue.length);
       inputRef.current?.scrollIntoView({ block: 'center', behavior: 'smooth' });
     });
+    // do not pass localValue.length here
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   return inputRef;

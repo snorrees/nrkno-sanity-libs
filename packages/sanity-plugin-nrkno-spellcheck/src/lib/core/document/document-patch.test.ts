@@ -1,5 +1,5 @@
 import { createPathPatch, createPathPatches } from './document-patch';
-import { Path, StringSchemaType } from '@sanity/types';
+import { Path, StringSchemaType } from 'sanity';
 import { ReplaceOperation } from '../types';
 
 const stringType: StringSchemaType = { name: 'string', jsonType: 'string' };
@@ -60,9 +60,9 @@ describe('spellcheck-patch', () => {
     });
 
     it('should support replacements of different length than the replaced word', () => {
-      const stringType: StringSchemaType = { jsonType: 'string', name: 'string' };
+      const stringType2: StringSchemaType = { jsonType: 'string', name: 'string' };
       const pathValue = {
-        type: stringType,
+        type: stringType2,
         path: ['title'],
         value: 'one two two two',
         spellcheck: true,

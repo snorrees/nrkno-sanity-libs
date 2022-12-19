@@ -4,6 +4,8 @@ plugin-types
 coverage
 data
 
+
+*.tsbuildinfo
 !.eslintrc.js
 !.prettierrc.js
 !.stylelintrc.js
