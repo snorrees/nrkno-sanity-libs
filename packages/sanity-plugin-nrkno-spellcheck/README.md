@@ -348,16 +348,13 @@ import {
   useCommitReplaceOperations
 } from '@nrk/sanity-plugin-nrkno-spellcheck';
 
-const [replaceOps, setReplaceOps] = useState<ReplaceOperation[]>([]);
-
 // whenever replaceOps changes, ie when setReplaceOps is invoked
 // useCommitReplaceOperations will immideatly apply the replace operations to the document
 // and call setReplaceOps([]).
-useCommitReplaceOperations(doc, type, replaceOps, setReplaceOps);
-
+const commitReplaceOps = useCommitReplaceOperations(doc, type, replaceOps, setReplaceOps);
 
 // somewhere else, to trigger document replacements 
-setReplaceOps([{/* replace operations */}])
+commitReplaceOps([{/* replace operations */}])
 ```
 
 # How it works
